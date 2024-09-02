@@ -232,29 +232,34 @@ app.get('/user', jwt_validation, async (req, res) => {
         ]
       }
     }
-    const users = await User.findAll({
+    const userFound = await User.findAll({
       where: whereClause,
-      attributes: {
-        include: [
-          // Include the count of unread messages as a new field
-          [fn("COUNT", col("receivedMessages.id")), "unreadMessageCount"],
-        ],
-      },
-      include: [
-        {
-          model: Message,
-          as: "receivedMessages", // Use the correct alias here
-          attributes: [],
-          where: {
-            recipient_id: user.user_id, // The logged-in user is the recipient
-            is_read: false, // Only count unread messages
-          },
-          required: false, // Use a LEFT JOIN
-        },
-      ],
-      group: ["users.user_id"], // Group by user_id to get the correct count
+      attributes: ['user_id', 'name_awal', 'nama_akhir', 'email', 'alamat', 'socket_id', 'is_online'],
     });
-    return callback_send(res, 200, false, users, null)
+
+    // Step 2: Fetch Unread Messages Count in a single query
+    const unreadMessages = await Message.findAll({
+      where: {
+        recipient_id: user.user_id, // Unread messages for the logged-in user
+        is_read: false, // Only count unread messages
+      },
+      attributes: ['sender_id', [fn('COUNT', col('id')), 'unreadMessageCount']],
+      group: ['sender_id'],
+    });
+
+    // Convert unread messages to a map for easy lookup
+    const unreadMessagesMap = unreadMessages.reduce((acc, { sender_id, unreadMessageCount }) => {
+      acc[sender_id] = unreadMessageCount;
+      return acc;
+    }, {});
+
+    // Combine Users with Unread Counts
+    const usersWithUnreadCounts = userFound.map((u) => ({
+      ...u.toJSON(),
+      messageUnread: unreadMessagesMap[u.user_id] || 0, // Lookup or default to 0
+    }));
+
+    return callback_send(res, 200, false, usersWithUnreadCounts, null);
   } catch (error) {
     console.log(error)
     return callback_send(res, 500, true, null, 'Server Error')
