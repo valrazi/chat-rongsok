@@ -5,7 +5,7 @@ const db = require("./config.js");
 const User = require("./models/users.js");
 const Product = require("./models/products.js");
 const Message = require("./models/messages.js");
-const { where, Op } = require("sequelize");
+const { where, Op, fn, col } = require("sequelize");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const bcrypt = require("bcrypt");
@@ -129,6 +129,7 @@ io.on("connection", (socket) => {
             sender_id: from_user_id,
             recipient_id: u.user_id,
             message: message,
+            is_read: false,
           });
           socket.emit('private_message', ({from_user_id, to_user_id: u.user_id, message}))
         })
@@ -165,6 +166,16 @@ io.on("connection", (socket) => {
               message: message,
             });
           }
+          await Message.update(
+            { is_read: true },
+            {
+              where: {
+                recipient_id: sender.user_id,
+                sender_id: recipient.user_id,
+                is_read: false, // Only update unread messages
+              },
+            }
+          );
 
           const allMessage = await Message.findAll({
             where: {
@@ -222,8 +233,27 @@ app.get('/user', jwt_validation, async (req, res) => {
       }
     }
     const userFound = await User.findAll({
-      where: whereClause
-    })
+      where: whereClause,
+      attributes: {
+        include: [
+          // Include the count of unread messages as a new field
+          [fn("COUNT", col("Messages.id")), "unreadMessageCount"],
+        ],
+      },
+      include: [
+        {
+          model: Message,
+          as: "Messages",
+          attributes: [],
+          where: {
+            recipient_id: user.user_id, // The logged-in user is the recipient
+            is_read: false, // Only count unread messages
+          },
+          required: false, // Use a LEFT JOIN
+        },
+      ],
+      group: ["User.user_id"], // Group by user_id to get the correct count
+    });
     return callback_send(res, 200, false, userFound, null)
   } catch (error) {
     console.log(error)

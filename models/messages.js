@@ -32,6 +32,10 @@ const Message = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: Sequelize.NOW,
     },
+    is_read: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
   },
   {
     tableName: "messages", // Explicitly defining the table name
