@@ -232,18 +232,18 @@ app.get('/user', jwt_validation, async (req, res) => {
         ]
       }
     }
-    const userFound = await User.findAll({
+    const users = await User.findAll({
       where: whereClause,
       attributes: {
         include: [
           // Include the count of unread messages as a new field
-          [fn("COUNT", col("Messages.id")), "unreadMessageCount"],
+          [fn("COUNT", col("receivedMessages.id")), "unreadMessageCount"],
         ],
       },
       include: [
         {
           model: Message,
-          as: "Messages",
+          as: "receivedMessages", // Use the correct alias here
           attributes: [],
           where: {
             recipient_id: user.user_id, // The logged-in user is the recipient
@@ -252,9 +252,9 @@ app.get('/user', jwt_validation, async (req, res) => {
           required: false, // Use a LEFT JOIN
         },
       ],
-      group: ["User.user_id"], // Group by user_id to get the correct count
+      group: ["users.user_id"], // Group by user_id to get the correct count
     });
-    return callback_send(res, 200, false, userFound, null)
+    return callback_send(res, 200, false, users, null)
   } catch (error) {
     console.log(error)
     return callback_send(res, 500, true, null, 'Server Error')

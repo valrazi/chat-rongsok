@@ -1,6 +1,8 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require("../config.js");
 const ProductLiked = require("./product_liked.js");
+const Message = require("./messages.js"); // Import Message model
+
 const User = sequelize.define("users", {
   user_id: {
     type: Sequelize.INTEGER,
@@ -44,4 +46,7 @@ const User = sequelize.define("users", {
 });
 User.hasMany(ProductLiked, { foreignKey: 'user_id' });
 ProductLiked.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Message, { foreignKey: "sender_id", as: "sentMessages" });
+User.hasMany(Message, { foreignKey: "recipient_id", as: "receivedMessages" });
+
 module.exports = User;

@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../config.js");
+const User = require('./users.js')
 const Message = sequelize.define(
   "Message",
   {
@@ -42,5 +43,8 @@ const Message = sequelize.define(
     timestamps: false, // Disabling automatic creation of `createdAt` and `updatedAt` fields
   }
 );
+// Message.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
+// Message.belongsTo(User, { foreignKey: "recipient_id", as: "recipient" });
+
 
 module.exports = Message;
