@@ -562,6 +562,12 @@ app.delete("/product/:id", async (req, res) => {
       },
     });
     if (productFound) {
+      await ProductLiked.destroy({
+        where: {
+          produk_id: id
+        }
+      })
+      
       const deleteProduct = await Product.destroy({
         where: {
           produk_id: id,
