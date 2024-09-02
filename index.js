@@ -249,9 +249,6 @@ app.post("/register", async (req, res) => {
       },
     });
     if (emailExist) {
-      res.json({
-        error: "email sudah tersedia",
-      });
       return callback_send(res, 500, true, {}, "Email already exist");
     } else {
       const newUser = await User.create({
@@ -567,7 +564,7 @@ app.delete("/product/:id", async (req, res) => {
           produk_id: id
         }
       })
-      
+
       const deleteProduct = await Product.destroy({
         where: {
           produk_id: id,
