@@ -71,7 +71,7 @@ const jwt_validation = async (req, res, next) => {
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://barang-rongsok-user.vercel.app",
     methods: ["GET", "POST"],
   },
 });
