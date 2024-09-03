@@ -229,6 +229,8 @@ app.get('/admin/user' , async (req, res) => {
 app.delete(`/admin/user/:id`, async (req, res) => {
   const {params} = req, {id} = params
   try {
+    await Message.destroy({where: {sender_id: id}})
+    await Message.destroy({where: {recipient_id: id}})
     await ProductLiked.destroy({where:{user_id: id}})
     await Product.destroy({where: {user_id: id}})
     await User.destroy({where: {user_id: id}})
