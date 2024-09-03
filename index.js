@@ -215,6 +215,56 @@ io.on("connection", (socket) => {
 app.use(express.json());
 app.use(cors());
 
+app.get('/admin/user' , async (req, res) => {
+  const { query } = req
+  try {
+    let userFound = await User.findAll();
+    return callback_send(res, 200, false, userFound, null)
+  } catch (error) {
+    console.log(error)
+    return callback_send(res, 500, true, null, 'Server Error')
+  }
+})
+
+app.delete(`/admin/user/:id`, async (req, res) => {
+  const {params} = req, {id} = params
+  try {
+    await User.destroy({where: {user_id: id}})
+    return callback_send(res, 200, false, {}, null)
+  } catch (error) {
+    console.log(error)
+    return callback_send(res, 500, true, null, 'Server Error')
+  }
+})
+
+app.get('/admin/user/:id', async (req, res) => {
+  const {params} = req, {id} = params
+  try {
+    let user = await User.findOne({where: {user_id: id}})
+    user = user.toJSON()
+    delete user.katasandi
+    const product = await Product.findAll({where: {
+      user_id: user.user_id
+    }})
+    return callback_send(res, 200, false, {user, product}, null)
+  } catch (error) {
+    console.log(error)
+    return callback_send(res, 500, true, null, 'Server Error')
+  }
+})
+
+app.delete(`/admin/product/:id`, async (req, res) => {
+  const {params} = req, {id} = params
+  try {
+    await Product.destroy({where: {produk_id: id}})
+    return callback_send(res, 200, false, {}, null)
+  } catch (error) {
+    console.log(error)
+    return callback_send(res, 500, true, null, 'Server Error')
+  }
+})
+
+
 app.get('/user', jwt_validation, async (req, res) => {
   const { user, query } = req, { name } = query
   try {
